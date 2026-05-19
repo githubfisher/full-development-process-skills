@@ -47,6 +47,7 @@ $this->getDI()->get('db_bi_center')->updateAsDict(
 $this->getDI()->get('db_bi_center')->delete('table', $where, $bind);
 ```
 ### 3.所有 SQL 查询必须使用 `try-catch` 
+在非pro环境,将SQL语句记录到日志中
 在catch中通过RuntimeException上抛错误 **必须将 SQL 语句拼接到错误内容中**：
 上抛内容应包含：
 - 异常消息 (`$e->getMessage()`)
@@ -56,6 +57,7 @@ $this->getDI()->get('db_bi_center')->delete('table', $where, $bind);
 ```php
 try {
     $sql = "SELECT * FROM table WHERE id = :id";
+    RUNTIME != 'pro' && $this->logger->write_log('sql: ' . $sql, 'info'); //debug
     $result = $this->getDI()->get('db_bi_center_r')->fetchAll(
         $sql,
         \Phalcon\Db::FETCH_ASSOC,
