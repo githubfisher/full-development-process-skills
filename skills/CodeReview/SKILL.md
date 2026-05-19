@@ -1,5 +1,5 @@
 ---
-name: code review代码
+name: code review
 description: 该技能用于code review代码时候
 ---
 
