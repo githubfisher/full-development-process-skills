@@ -38,6 +38,10 @@ PHP 项目开发规范和最佳实践。
   - 方法/函数：camelCase
   - 常量：UPPER_SNAKE_CASE
 
+### 4. 代码格式化
+- 新增代码部分或修改代码部分, 按照PhpStorm设置的代码样式重新设置代码格式, 快捷键: Option + Command + L
+- 未改动代码部分, 不要重新设置代码格式, 保持原样
+
 ## RESTful API 规范
 **这非常重要**：所有API接口开发必须仔细阅读此规范
 详见 [RESTful API 规范](references/RESTful_api.md)
