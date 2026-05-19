@@ -1,5 +1,5 @@
 ---
-name: webcommon
+name: web-common
 description: webcommon 依赖移除——从项目中彻底剥离 webcommon，将所有依赖代码迁移到项目本地。只复制不改写，逻辑必须一致。
 ---
 

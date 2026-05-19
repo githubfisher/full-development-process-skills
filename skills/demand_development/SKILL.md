@@ -1,5 +1,5 @@
 ---
-name: demand_development
+name: demand-development
 description: PHP 项目开发与维护 需求开发，功能优化、功能迁移、阅读需求文档 等 相关问题。
 ---
 
