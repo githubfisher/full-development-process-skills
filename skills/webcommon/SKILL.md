@@ -101,15 +101,40 @@ description: webcommon 依赖移除——从项目中彻底剥离 webcommon，�
 **目标**：为每个依赖文件制定迁移计划，确定复制目标路径和迁移顺序
 
 **执行方式**：
+
+#### 阶段 0：composer files 加载规则（固定规则，直接应用）
+
+以下文件**必须加入 composer `files` 显式加载**：
+
+| 文件 | 迁移目标路径 | 原因 |
+|------|------------|------|
+| `helpers.php` | `app/common/helpers.php` | 无命名空间，全局函数文件，必须通过 files 加载 |
+| `Strtool.php` | `app/library/Strtool.php` | helpers.php 内部 `use Library\Strtool`，需确保在 helpers 之前加载 |
+
+其他命名空间文件（如 `felog.php`、`jsonlog.php`）通过框架 loader 或目录注册加载，不需要加入 composer files。
+
+**迁移完成后 composer.json files 应为**：
+```json
+"files": [
+  "app/common/helpers.php",
+  "app/library/Strtool.php"
+]
+```
+
+此规则无需用户确认，在 Phase 3 substep（composer.json 更新）中直接应用。
+
+#### 阶段 1：方案设计
+
 1. 基于 Step 0 的依赖清单，为每个 webcommon 文件确定：
    - **源路径**：webcommon 中的原始文件路径
-   - **目标路径**：复制到项目本地的目标路径
+   - **目标路径**：复制到项目本地的目标路径（按用户上面的回答确定）
    - **命名空间调整**：如需调整命名空间以匹配项目结构（这是唯一允许的"修改"，且仅限命名空间声明）
    - **引用更新**：哪些文件的 use/require 语句需要更新指向
+   - **composer files 加载**：是否需要加入 composer files（基于阶段 0 的用户确认）
 2. 确定迁移顺序（按依赖链，被依赖的先迁移）：
    - **Phase 1**：A 类 - webcommon 自有代码（按依赖链从底层到上层）
    - **Phase 2**：B 类 - SDK 依赖
-   - **Phase 3**：C 类 - 移除 webcommon 加载入口
+   - **Phase 3**：C 类 - 移除 webcommon 加载入口，同步更新 composer.json files 配置
 3. 拆分子步骤（每个文件一个子步骤），编号 substep_1 到 substep_N
 4. 按模板将迁移方案文档写入 `workspace/docs/{项目名}-迁移方案.md`
 

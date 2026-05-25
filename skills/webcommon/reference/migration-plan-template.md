@@ -7,7 +7,28 @@
 3. **三阶段优先级**：Phase 1（自有代码）→ Phase 2（SDK）→ Phase 3（移除加载）
 4. **只规划复制和引用更新**：不规划任何逻辑修改
 
-## 产出格式
+## 产出格式（必须包含 composer files 配置区块）
+
+### 0. composer files 加载规则（固定规则）
+
+以下文件必须加入 composer `files` 显式加载：
+
+| 文件 | 目标路径 | 原因 |
+|------|---------|------|
+| `helpers.php` | `app/common/helpers.php` | 无命名空间，全局函数文件 |
+| `Strtool.php` | `app/library/Strtool.php` | helpers.php 内部 `use Library\Strtool`，需确保在 helpers 之前加载 |
+
+其他命名空间文件（如 `felog.php`、`jsonlog.php`）通过框架 loader 或目录注册加载，不需要加入 composer files。
+
+**composer.json files 最终配置**（Phase 3 substep 直接应用）：
+```json
+"files": [
+  "app/common/helpers.php",
+  "app/library/Strtool.php"
+]
+```
+
+---
 
 ### 1. 迁移路径映射表
 
@@ -74,4 +95,6 @@ Phase 3 - 移除加载：
 □ 每个子步骤的引用更新已列出
 □ 目标路径符合项目现有目录结构
 □ 命名空间调整仅限 namespace 声明行
+□ composer files 策略已与用户确认（helpers 目录 + Strtool 加载方式）
+□ composer.json 最终 files 配置已在方案中明确列出
 ```
