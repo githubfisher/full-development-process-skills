@@ -5,41 +5,67 @@ description: PHP/Phalcon 接口（fbi/bi-common/ard-*）逆向分析：根据路
 
 ## 本 skill 的工作方式
 
-强**顺序门控**流程，输入是一个路由（如 `GET /bi/order/list` 或 `OrderController@detailAction`），输出是一篇飞书 docx + 一行 FAQ 索引更新。
+输入是一个路由（如 `/api/storeabnormalapi/store_abnormal_list`），自动完成代码分析，产出草稿后由用户确认，确认后上传飞书。
 
-**绝对不要**跳过 Step 1 直接读代码就开始写文档。每一步的产物喂给下一步，缺一不可。
+**全程只有两个用户确认点：**
+
+1. **草稿生成后**：展示本地 markdown 路径 + 关键摘要，用户确认内容正确
+2. **发飞书前**：用户回"发飞书"后才调用飞书 API
 
 ---
 
-## 激活后第一步（必须按顺序执行）
+## 激活后立即执行（无需等待确认）
 
-1. **读规则**：用 Read 读 `reference/checklist.md`，确认强制规则与各 Step 必读文件表。
-2. **读配置**：用 Read 读 `workspace/config.md`
-   - 如果文件不存在 → 从 `reference/config-template.md` 复制创建，**先问用户**：飞书目标 wiki node token、FAQ docx token、待分析的代码仓库本地路径，写入 config 后再继续
-   - 如果存在 → 直接使用其中的 token 与 repo 路径
-3. **建任务文件**：在 `workspace/docs/` 下建 `{接口路径kebab}.md`（如 `bi-order-list.md`），作为分析过程的草稿落地。
-4. **按 Step 顺序执行**，每步完成必须等用户明确"通过"才能进入下一步。
+1. 读 `reference/checklist.md`（强制规则）
+2. 读 `workspace/config.md`（token / repo 路径）
+   - 不存在 → 按 `reference/config-template.md` 创建并询问用户填写
+3. 创建草稿文件 `workspace/docs/{接口路径kebab}.md`
+4. **连续执行 Step 0 → 1 → 2 → 3 → 4 → 5**，每步读对应 reference 文件，结果写入草稿
 
 ⛔ 严禁行为：
 - 未读 config 就开始动飞书 API
-- **未跑 Step 0（FAQ 反查）就直接进入分析** —— 会重复新建文档
+- 未跑 Step 0（FAQ 反查）就直接分析（会重复新建文档）
 - 未定位到入口文件就臆造参数表
 - SQL 只看一层 Model 调用就当成全部链路
-- 把用户对单个疑问的回应当作整个 Step 的通过确认
 
 ---
 
-## 流程概览
+## 流程
 
-| Step | 动作 | 必读文件 |
-|------|------|----------|
-| 0 | **已存在文档检查**：FAQ 反查路由，决定本次走"新建"还是"更新" | `reference/preexist-check.md` |
-| 1 | 入口定位：路由 → Controller@action | `reference/locate-entry.md` |
-| 2 | 参数分析：入参清单 + 校验 + SQL 条件映射 | `reference/param-analysis.md` |
-| 3 | 主 SQL 链路：核心查询 SQL 拆解（表/JOIN/WHERE/字段） | `reference/sql-extraction.md` |
-| 4 | 后处理链路：数据加工、二次查询、外部调用 | `reference/post-processing.md` |
-| 5 | 字段翻译：locale key + 含义 | `reference/translation-extraction.md` |
-| 6 | 输出飞书：按 Step 0 的 mode 分支 — create 走新建 docx + FAQ 追加；update 走覆盖已有 docx + FAQ 行更新时间戳 | `reference/feishu-output.md` |
+| 阶段 | 步骤 | 说明 | 必读文件 |
+|------|------|------|----------|
+| **自动执行** | Step 0 | FAQ 反查路由，决定 create / update | `reference/preexist-check.md` |
+| | Step 1 | 路由 → Controller@action 入口定位 | `reference/locate-entry.md` |
+| | Step 2 | 入参清单 + SQL 条件映射 | `reference/param-analysis.md` |
+| | Step 3 | 主 SQL 链路拆解 | `reference/sql-extraction.md` |
+| | Step 4 | 后处理 + 二次查询 + 外部调用 | `reference/post-processing.md` |
+| | Step 5 | 字段翻译 key + locale 含义 | `reference/translation-extraction.md` |
+| **⏸ 确认点 1** | — | 展示草稿路径 + 摘要，等用户确认内容 | — |
+| **自动执行** | Step 6 self-check | 按 checklist 验收草稿完整性 | `reference/checklist.md` |
+| **⏸ 确认点 2** | — | 展示飞书上传计划，等用户回"发飞书" | `reference/feishu-output.md` |
+| **自动执行** | Step 6 上传 | create / update 分支执行 | `reference/feishu-output.md` |
+
+---
+
+## 确认点 1 的提示格式
+
+Step 0-5 全部完成后，输出：
+
+```
+草稿已生成：workspace/docs/{kebab}.md
+
+【摘要】
+- 入口：{文件:行号}
+- 主表：{表名}
+- 入参数量：{n} 个
+- 后处理步骤：{n} 个
+- 已知坑：{n} 条
+
+如有需要修改的内容请告诉我，没有问题回复"发飞书"直接上传。
+```
+
+> 用户可以在这里指出任何错误或补充，我修改草稿后重新展示。
+> 用户回"发飞书"即代表确认，进入 Step 6 self-check 和上传。
 
 ---
 
@@ -48,51 +74,50 @@ description: PHP/Phalcon 接口（fbi/bi-common/ard-*）逆向分析：根据路
 | 类型 | 路径 |
 |------|------|
 | 本地分析草稿 | `workspace/docs/{接口路径kebab}.md` |
-| 配置（token/repo） | `workspace/config.md` |
-| 飞书文档 | 配置中 wiki node 下新建的 docx |
-| FAQ 更新 | 配置中 FAQ docx 末尾追加一行 |
+| 配置 | `workspace/config.md` |
+| 飞书文档 | config 中 `wiki_node_token` 文件夹下新建的 docx |
+| FAQ 更新 | config 中 FAQ docx 末尾追加一行 |
 
 ---
 
-## 输出文档结构（飞书 docx 与本地草稿一致）
+## 输出文档结构
+
+> 面向受众：产品 / 测试 / 数据。不含代码路径、继承关系、鉴权实现等开发内部信息。
 
 ```
 # 接口分析：{METHOD} {PATH}
 
 ## 1. 基本信息
-- 路由 / Controller / Action / 文件:行号
-- 鉴权方式 / 调用方
+| 路由 | 支持国家 | 功能说明 |
+（如有国家间行为差异，在表格下方单独说明）
 
-## 2. 入参清单
-| 字段 | 类型 | 必填 | 含义 | 默认值 | SQL 条件映射 |
+## 2. 请求参数
+| 字段 | 类型 | 必填 | 说明 | 默认值 | 可选值/范围 |
 
-## 3. 主查询 SQL
-- SQL 全文（参数化形式）
-- 涉及表与 JOIN 关系
-- WHERE 条件来源（哪个入参 → 哪个条件）
-- 返回字段列表
+## 3. 查询 SQL
+- SQL 全文（参数化形式，供数据同学直接参考）
+- 涉及表说明（表名 + 业务含义）
 
-## 4. 后处理逻辑
-- 数据加工步骤（按顺序）
-- 二次 SQL 查询（每条都列出来源代码位置）
-- 外部服务调用（RPC / HTTP）
+## 4. 数据处理逻辑
+- 按步骤列出业务处理（不含文件:行号等代码细节）
+- 二次查询说明（触发条件 + SQL）
 
-## 5. 字段翻译表
-| 翻译 key | 中文含义 | 使用场景 |
+## 5. 枚举值说明
+| 字段 | 值 | 含义 |
+（合并所有枚举、翻译 key 的含义，面向业务理解）
 
-## 6. 返回结构
-最终响应 JSON 示例
+## 6. 返回示例
+最终响应 JSON 示例 + 关键字段说明
 
-## 7. 已知坑 / FAQ
-本次分析中发现的非显然点
+## 7. 注意事项
+已知坑、边界条件、容易踩的问题
 ```
 
 ---
 
 ## 飞书相关依赖
 
-- 写 docx：依赖 `lark-doc` skill 的 `docs +create`（v2 + DocxXML 或 Markdown）
-- 挂到 wiki 节点：依赖 `lark-wiki` skill
-- 更新 FAQ：依赖 `lark-doc` 的 patch/append 能力
+- 创建 docx：`lark-cli docs +create --api-version v2 --doc-format markdown --folder-token {wiki_node_token} --content "$(cat ...)"`
+- 更新 FAQ：`lark-cli docs +update --api-version v2 --command append`
 
 具体调用方式见 `reference/feishu-output.md`。

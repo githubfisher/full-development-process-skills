@@ -1,30 +1,25 @@
 # Step 6：飞书输出
 
-## 前置门（来自 checklist R5）
+## 前置门（R5）
 
-⚠️ **不允许直接动飞书 API。** 先把本地草稿 markdown 路径丢给用户，等用户回 "OK / 通过 / 发飞书" 才能继续。
-
-提示语必须按 mode 区分：
+⚠️ **不允许直接动飞书 API。** 用户在确认点 1 回"发飞书"后，进入此步前先做 self-check，再展示上传计划：
 
 **create 模式：**
 ```
-本接口分析草稿已生成：workspace/docs/{kebab}.md
-本次走【新建】流程，确认后我会：
-1. 创建 docx 并挂到 wiki_node_token: {token}
+本次走【新建】流程：
+1. 创建 docx 到文件夹 {wiki_node_token}
 2. 在 FAQ docx 末尾追加索引行
-请回复"发飞书"继续。
 ```
 
 **update 模式：**
 ```
-本接口分析草稿已生成：workspace/docs/{kebab}.md
-本次走【更新】流程，目标文档：{existing_url}
-确认后我会：
-1. 覆盖更新 existing_docx_token: {token} 的内容
-2. 把 FAQ docx 第 {faq_line_no} 行的"更新时间"和"关键坑点摘要"刷新
-**不会新建 docx，不会新增 FAQ 行。**
-请回复"发飞书"继续。
+本次走【更新】流程：
+1. 覆盖已有文档 {existing_url}
+2. 刷新 FAQ 第 {faq_line_no} 行的更新时间
+（不新建 docx，不新增 FAQ 行）
 ```
+
+展示后**立即执行**，无需再等用户回复。
 
 ## 分支：mode = create
 
@@ -47,28 +42,23 @@ Read 草稿 frontmatter，取出 mode / existing_docx_token / faq_line_no
 
 ## 6.2c 创建 docx 并写入内容（仅 create 模式）
 
-调用 `lark-doc` skill：
+调用 `lark-doc` skill，用 `--folder-token` 直接建到目标云盘文件夹：
 
 ```bash
-# 用 Markdown 创建（推荐，因为草稿就是 markdown）
-lark-cli docs +create --api-version v2 --format markdown \
-  --title "接口分析：{METHOD} {PATH}" \
-  --from-file workspace/docs/{kebab}.md
+# config 里的 wiki_node_token 实为云盘文件夹 token，用 --folder-token 指定
+lark-cli docs +create --api-version v2 \
+  --doc-format markdown \
+  --folder-token {wiki_node_token} \
+  --content "$(cat workspace/docs/{kebab}-upload.md)"
 ```
 
-得到返回的 `obj_token`（docx_token）。
+得到返回的 `document_id`（docx_token）与 `url`。
 
-## 6.3c 挂到 wiki 节点（仅 create 模式）
+> ⚠️ 不要用 `--wiki-node`（那是 wiki 知识库节点专用），也不要用 `--markdown`（v2 要用 `--content`）。
 
-调用 `lark-wiki` skill 把刚建的 docx 移到目标 wiki 节点下：
+## 6.3c（已合并至 6.2c）
 
-```bash
-lark-cli wiki node move \
-  --obj-type docx --obj-token {docx_token} \
-  --target-parent-node {wiki_node_token}
-```
-
-记录新节点链接（url 形如 `https://xxx.feishu.cn/wiki/{node_token}`）。
+`--folder-token` 已在创建时直接指定父目录，无需单独 move 步骤。
 
 ## 6.4c FAQ 追加索引行（仅 create 模式）
 
