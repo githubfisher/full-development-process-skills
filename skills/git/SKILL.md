@@ -1,6 +1,6 @@
 ---
 name: git
-description: Git 分支操作规范。触发场景：(1) 用户要求创建分支、切分支、推分支；(2) 涉及 fbi / bi-common / ard-api / ard-etl / message / nl-data / report 任一项目的 git 操作；(3) 用户提到"测试分支""线上分支""trunk""common"等内部约定。
+description: Git 分支操作规范。触发场景：(1) 用户要求创建分支、切分支、推分支；(2) 涉及 fbi / bi-common / ard-api / ard-etl / message / nl-data / report / hbi 任一项目的 git 操作；(3) 用户提到"测试分支""线上分支""trunk""common"等内部约定。
 ---
 
 # Git 操作规范
@@ -18,6 +18,7 @@ description: Git 分支操作规范。触发场景：(1) 用户要求创建分�
 | message   | KIT 端 API 系统    |
 | nl-data   | 实时数据系统       |
 | report    | 客户端 API 系统    |
+| hbi       | HBI 分析系统       |
 
 > 云效仓库 ID 等信息见 `reference/yunxiao.md`（备用，当前不使用）。
 
@@ -44,6 +45,7 @@ description: Git 分支操作规范。触发场景：(1) 用户要求创建分�
 ~/sites/message
 ~/sites/nl-data
 ~/sites/report
+~/sites/hbi
 ```
 
 > **默认执行方式**：分支创建 = **本地 git 操作后 push 远端**。云效 MCP 仅用于查询分支/MR 等只读场景，不用于创建分支。
